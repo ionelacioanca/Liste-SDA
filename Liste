@@ -1,0 +1,170 @@
+/*
+SGr: 2.1
+functia de adaugare: Ionela Cioanca-Closca
+functia de inserare: Elena-Roxana Catrina
+functia de stergere: Robert-Alexandru Balan 
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definirea structurii pentru nodul listei
+typedef struct nod
+{
+    int poz;              // Pozitia nodului (nu este utilizata in mod curent)
+    char nume[30];        // Numele stocat in nod
+    struct nod* urm;      // Pointer catre urmatorul nod in lista
+} nod;
+
+nod* adaugare(nod* prim)
+{
+    nod* p = (nod*)malloc(sizeof(nod));  // Alocare memorie pentru noul nod
+    if (p == NULL)
+    {
+        printf("Eroare la alocarea dinamica!");  // Afisare mesaj de eroare daca alocarea a esuat
+        exit(0);
+    }
+
+    char nume[30];
+    printf("Introduceti un nume in lista: ");
+    scanf("%s", nume);  // Citirea numelui de la utilizator
+
+    strcpy(p->nume, nume);  // Copierea numelui in campul 'nume' al noului nod
+    p->urm = NULL;          // Initializarea pointerului catre urmatorul nod cu NULL
+
+    if (prim == NULL)
+    {
+        return p;  // Daca lista este goala, noul nod devine inceputul listei
+    }
+    else
+    {
+        p->urm = prim;  // Daca lista nu este goala, noul nod devine primul nod, iar urmatorul sau nod devine actualul inceput al listei
+        return p;
+    }
+}
+
+void afisare(nod* prim)
+{
+    nod* p;
+    p = prim;
+    while (p != NULL)
+    {
+        printf("\n%s\n", p->nume);  // Afisarea numelui din nod
+        p = p->urm;                  // Trecerea la urmatorul nod in lista
+    }
+}
+
+nod* inserare(nod* prim)
+{
+    nod* p;
+    p = (nod*)malloc(sizeof(nod));  // Alocare memorie pentru noul nod
+    if (p == NULL)
+    {
+        printf("Eroare la alocarea dinamica!");  // Afisare mesaj de eroare daca alocarea a esuat
+        exit(0);
+    }
+
+    char nume[30];
+    int poz;
+
+    printf("Introduceti un nume in lista: ");
+    scanf("%s", nume);  // Citirea numelui de la utilizator
+    printf("Introduceti pozitia: ");
+    scanf("%d", &poz);  // Citirea pozitiei de la utilizator
+
+    strcpy(p->nume, nume);  // Copierea numelui in campul 'nume' al noului nod
+    p->poz = poz;           // Setarea pozitiei noului nod
+    p->urm = NULL;          // Initializarea pointerului catre urmatorul nod cu NULL
+
+    if (prim == NULL || poz == 1)
+    {
+        p->urm = prim;  // Daca lista este goala sau pozitia este 1, noul nod devine inceputul listei
+        return p;
+    }
+    else
+    {
+        nod* q = prim;
+        for (int i = 1; i < poz - 1 && q != NULL; i++)
+        {
+            q = q->urm;  // Parcurgerea listei pana la nodul de la pozitia dorita
+        }
+        if (q == NULL)
+        {
+            printf("Pozitia introdusa este mai mare decat lungimea listei.\n");
+            free(p);  // Eliberarea memoriei alocate pentru noul nod daca pozitia depaseste lungimea listei
+            return prim;
+        }
+        p->urm = q->urm;  // Actualizarea legaturilor pentru a insera noul nod la pozitia dorita
+        q->urm = p;
+        return prim;
+    }
+}
+
+nod* stergere(nod* prim, char nume[])
+{
+    // Declarare pointeri
+    nod* q1, * q2;
+    // Parcurge lista pana gaseste nodul de eliminat sau ajunge la sfarsit
+    for (q1 = q2 = prim; q1 != NULL && strcmp(nume, q1->nume) != 0; q2 = q1, q1 = q1->urm);
+
+    // Daca nodul de eliminat a fost gasit
+    if (q1 != NULL)
+    {
+        // Verifică dacă este la începutul listei
+        if (q1 == q2)
+        {
+            prim = prim->urm;  // Actualizeaza pointerul catre inceputul listei
+        }
+        else
+        {
+            q2->urm = q1->urm;  // Actualizeaza pointerii pentru a exclude nodul de eliminat
+        }
+        free(q1);  // Eliberarea memoriei ocupate de nodul de eliminat
+    }
+    // Returneaza noul inceput al listei (lista modificata)
+    return prim;
+}
+
+// Functia principala (main)
+int main()
+{
+    nod* prim;
+    prim = NULL;  // Initializarea listei ca fiind vida
+    int opt;
+    char nume[30];
+
+    while (1)
+    {
+        printf("\n0. Iesire\n");
+        printf("1. Adaugare nume in lista\n");
+        printf("2. Inserare nume in lista\n");
+        printf("3. Stergere nume din lista\n");
+        printf("Introduceti optiunea dorita: ");
+        scanf("%d", &opt);
+
+        switch (opt)
+        {
+        case 0:
+            exit(0);  // Iesirea din program
+            break;
+        case 1:
+            prim = adaugare(prim);  // Adaugare si afisare lista
+            afisare(prim);
+            break;
+        case 2:
+            prim = inserare(prim);  // Inserare si afisare lista
+            afisare(prim);
+            break;
+        case 3:
+            printf("Introduceti numele care sa fie sters: ");
+            scanf("%s", nume);
+            prim = stergere(prim, nume);  // Stergere si afisare lista
+            afisare(prim);
+            break;
+        default:
+            printf("Optiunea nu este valida!");
+            break;
+        }
+    }
+    return 0;
+}
