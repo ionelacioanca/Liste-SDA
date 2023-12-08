@@ -1,0 +1,176 @@
+//Ionela Cioanca-Closca, Elena-Roxana Catrina
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Contact {
+	char nume[50];
+	int numarTelefon;
+	struct Contact* left;
+	struct Contact* right;  // declarate  cu struct pt ca pana la urma left and right devin arbori la randul lor
+} Contact;
+
+Contact* creareNod(char nume[], int numarTelefon) { // de tip contact pt ca se returneaza o variabila de acest tip
+	Contact* nouNod = (Contact*)malloc(sizeof(Contact)); // alocare dinamica
+	strcpy(nouNod->nume, nume);  // de copiaza numele
+	nouNod->numarTelefon = numarTelefon; //se copiaza nr de telf in noul nod
+	nouNod->left = nouNod->right = NULL;// la noul nod se adauga 2 fii initializati cu null
+	return nouNod;
+}
+
+
+Contact* adaugaContact(Contact* radacina, char nume[], int numarTelefon) { // se adauga un nou contact 
+	if (radacina == NULL) {  // dacav radacina e null se initializeaza
+		return creareNod(nume, numarTelefon);
+	}
+	//aici comparam numele pt a le adauga in arbore  in ordine alfabetica. punand in stanga ce este mai mic
+	int comparatie = strcmp(nume, radacina->nume);
+	if (comparatie < 0) {
+		radacina->left = adaugaContact(radacina->left, nume, numarTelefon);
+	}
+	else if (comparatie > 0) {
+		radacina->right = adaugaContact(radacina->right, nume, numarTelefon);
+	}
+
+	return radacina;
+}
+
+
+Contact* cautaContact(Contact* radacina, char nume[]) {
+	// fnct de cautare
+	if (radacina == NULL || strcmp(nume, radacina->nume) == 0) {
+		return radacina;
+	} // daca are doar radacina si e egala cu numele pe care l cautam atunci o returnam
+	// altfel facem pt stanga si dreapta s verificam
+	if (strcmp(nume, radacina->nume) < 0) {
+		return cautaContact(radacina->left, nume);
+	}
+
+	else {
+		return cautaContact(radacina->right, nume);
+	}
+}
+
+
+Contact* celMaiMic(Contact* radacina) { //functia cauta cel mai mic arbore,adica cel mai din stnaga din subarbore
+	Contact* current = radacina;
+	while (current && current->left != NULL) {
+		current = current->left;
+	}
+	return current;
+}
+
+// Funcție pentru ștergerea unui contact după nume
+Contact* stergeContact(Contact* radacina, char nume[]) {
+	if (radacina == NULL) {
+		return radacina;
+	}
+
+	int comparatie = strcmp(nume, radacina->nume);
+
+	if (comparatie < 0) {
+		radacina->left = stergeContact(radacina->left, nume);
+	}
+	else if (comparatie > 0) {
+		radacina->right = stergeContact(radacina->right, nume);
+	}
+	else {
+		// Nodul cu unul sau nicio frunza pt a l echilibra
+		if (radacina->left == NULL) {
+			Contact* temp = radacina->right;
+			free(radacina);
+			return temp;
+		}
+		else if (radacina->right == NULL) {
+			Contact* temp = radacina->left;
+			free(radacina);
+			return temp;
+		}
+
+		// Nodul cu doi copii găsim succesorul în ordine și îl înlocuim
+		Contact* temp = celMaiMic(radacina->right);
+		strcpy(radacina->nume, temp->nume);
+		radacina->numarTelefon = temp->numarTelefon;
+		radacina->right = stergeContact(radacina->right, temp->nume);
+	}
+
+	return radacina;
+}
+
+void eliberareMemorie(Contact* radacina) {
+	if (radacina != NULL) {
+		eliberareMemorie(radacina->left);
+		eliberareMemorie(radacina->right);
+		free(radacina);
+	}
+}
+void afiseazaInOrdine(Contact* radacina) {
+	if (radacina != NULL) {
+		afiseazaInOrdine(radacina->left);
+		printf("Nume: %s, Număr de telefon: %d\n", radacina->nume, radacina->numarTelefon);
+		afiseazaInOrdine(radacina->right);
+	}
+}
+
+int main() {
+    int opt;
+    Contact* radacina = NULL;
+    char numeCautat[50], numeAdaugat[50];
+    int numarTelefonAdaugat;
+
+    while (1) {
+        printf("1. Adaugarea unui nou contact in arbore\n");
+        printf("2. Căutarea unui contact după nume și afișarea detaliilor acestuia\n");
+        printf("3. Ștergerea unui contact după nume\n");
+        printf("4. Afișarea tuturor contactelor în ordine lexicografică\n");
+        printf("5. Eliberarea memoriei alocate pentru arbore la finalul programului\n");
+        printf("Introduceti optiunea dorita: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+        case 1:
+            printf("Introduceti numele noului contact: ");
+            scanf("%s", numeAdaugat);
+            printf("Introduceti numarul de telefon al noului contact: ");
+            scanf("%d", &numarTelefonAdaugat);
+            radacina = adaugaContact(radacina, numeAdaugat, numarTelefonAdaugat);
+            break;
+
+        case 2:
+            printf("Introduceti numele cautat: ");
+            scanf("%s", numeCautat);
+            Contact* rezultatCautare = cautaContact(radacina, numeCautat);
+            if (rezultatCautare != NULL) {
+                printf("\nDetalii pentru contactul cu numele %s: Număr de telefon %d\n", rezultatCautare->nume, rezultatCautare->numarTelefon);
+            }
+            else {
+                printf("\nContactul cu numele %s nu a fost găsit.\n", numeCautat);
+            }
+            break;
+
+        case 3:
+            printf("Introduceti numele persoanei pe care doriti s-o stergeti din agenda: ");
+            scanf("%s", numeCautat);
+            radacina = stergeContact(radacina, numeCautat);
+            printf("\nContactul cu numele %s a fost șters.\n", numeCautat);
+            break;
+
+        case 4:
+            printf("Contactele în ordine lexicografică:\n");
+            afiseazaInOrdine(radacina);
+            break;
+
+        case 5:
+            eliberareMemorie(radacina);
+            printf("\nMemoria a fost eliberata.\n");
+            radacina = NULL;
+            exit(0);
+            break;
+
+        default:
+            printf("Optiune invalida. Incercati din nou.\n");
+            break;
+        }
+    }
+    return 0;
+}
